@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  db:
+    image: joshvermaire/postgres-url-shortener
+    environment:
+      POSTGRES_PASSWORD: supersecretpassword
+      POSTGRES_USER: postgres
+      POSTGRES_DB: url_shortener_db
+      POSTGRES_HOST: localhost
+    ports:
+      - "5432:5432"
+
+  backend:
+    image: joshvermaire/express-url-shortener
+    ports:
+      - "3001:3001"
+    depends_on:
+      - db
+    command: bash -c 'while !</dev/tcp/db/5432; do sleep 1; done; npm run dev'
+    environment:
+      POSTGRES_PASSWORD: supersecretpassword
+      POSTGRES_USER: postgres
+      POSTGRES_DB: url_shortener_db
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+
+  vite:
+    image: joshvermaire/react-url-shortener
+    ports:
+      - "5173:5173"
+
+  nginx:
+    image: joshvermaire/nginx-url-shortener
+    ports:
+      - "8080:8080"
+    depends_on:
+      - vite
+      - backend
+      
